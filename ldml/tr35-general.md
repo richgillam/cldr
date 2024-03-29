@@ -2,7 +2,7 @@
 
 # Unicode Locale Data Markup Language (LDML)<br/>Part 2: General
 
-|Version|44 (draft)           |
+|Version|45 (draft)           |
 |-------|---------------------|
 |Editors|Yoshito Umaoka (<a href="mailto:yoshito_umaoka@us.ibm.com">yoshito_umaoka@us.ibm.com</a>) and <a href="tr35.md#Acknowledgments">other CLDR committee members|
 
@@ -44,6 +44,7 @@ The LDML specification is divided into the following parts:
 *   Part 6: [Supplemental](tr35-info.md#Contents) (supplemental data)
 *   Part 7: [Keyboards](tr35-keyboards.md#Contents) (keyboard mappings)
 *   Part 8: [Person Names](tr35-personNames.md#Contents) (person names)
+*   Part 9: [MessageFormat](tr35-messageFormat.md#Contents) (message format)
 
 ## <a name="Contents" href="#Contents">Contents of Part 2, General</a>
 
@@ -69,6 +70,7 @@ The LDML specification is divided into the following parts:
   * [Unit Identifiers](#Unit_Identifiers)
     * [Nomenclature](#nomenclature)
     * [Syntax](#syntax)
+  * [Unit Identifier Uniqueness](#Unit_Identifier_Uniqueness)
   * [Example Units](#Example_Units)
   * [Compound Units](#compound-units)
     * [Precomposed Compound Units](#precomposed-compound-units)
@@ -98,6 +100,7 @@ The LDML specification is divided into the following parts:
     * [Conversion Rules](#Conversion_Rules)
     * [Intermixing Transform Rules and Conversion Rules](#Intermixing_Transform_Rules_and_Conversion_Rules)
     * [Inverse Summary](#Inverse_Summary)
+  * [Transform Syntax Characters](#transform-syntax-characters)
 * [List Patterns](#ListPatterns)
   * [Gender of Lists](#List_Gender)
 * [ContextTransform Elements](#Context_Transform_Elements)
@@ -868,7 +871,7 @@ The long unit identifers are used as a key in the translated unit names for loca
 | day          | duration-day |
 
 
-The list of valid CLDR simple unit identifiers is found in _Section Validity Data](tr35.md#Validity_Data)_.
+The list of valid CLDR simple unit identifiers is found in _[Section Validity Data](tr35.md#Validity_Data)_.
 These names should not be presented to end users, however: the translated names for different languages (or variants of English) are available in the CLDR localized data.
 All syntactically valid CLDR unit identifiers values that are not listed in the validity data are reserved by CLDR for additional future units.
 There is one exception: implementations that need to define their own unit identifiers can do so via _[Private-Use Units](#Private_Use_Units)_.
@@ -912,15 +915,20 @@ Some of the constraints reference data from the unitIdComponents in [Unit_Conver
         | long_unit_identifier</td></tr>
 
 <tr><td>core_unit_identifier</td><td>:=</td>
-    <td>product_unit ("-per-" product_unit)*<br/>
-        | "per-" product_unit ("-per-" product_unit)*
+    <td>product_unit ("-" per "-" product_unit)*<br/>
+        | per "-" product_unit ("-" per "-" product_unit)*
         <ul><li><em>Examples:</em>
             <ul><li>foot-per-second-per-second</li>
                 <li>per-second</li>
             </ul></li>
             <li><em>Note:</em> The normalized form will have only one "per"</li>
-	  <li><em>Note:</em>The token 'per' is the single value in &lt;unitIdComponent type=”per”&gt;</li>
         </ul></td></tr>
+
+<tr><td>per</td><td>:=</td>
+    <td>"per"
+        <ul>
+			<li><em>Constraint:</em> The token 'per' is the single value in &lt;unitIdComponent type="per"&gt;</li>
+		</ul></td></tr>
 
 <tr><td>product_unit</td><td>:=</td>
         <td>single_unit ("-" single_unit)* ("-" pu_single_unit)*<br/>
@@ -934,9 +942,9 @@ Some of the constraints reference data from the unitIdComponents in [Unit_Conver
         <ul><li><em>Examples: </em>square-meter, or 100-square-meter</li></ul></td></tr>
 
 <tr><td>pu_single_unit</td><td>:=</td>
-    <td>“xxx-” single_unit | “x-” single_unit
+    <td>"xxx-" single_unit | "x-" single_unit
     <ul><li><em>Example:</em> xxx-square-knuts (a Harry Potter unit)</li>
-        <li><em>Note:</em> “x-” is only for backwards compatibility</li>
+        <li><em>Note:</em> "x-" is only for backwards compatibility</li>
         <li>See <a href="#Private_Use_Units">Private-Use Units</a></li>
     </ul></td></tr>
 
@@ -953,18 +961,19 @@ Some of the constraints reference data from the unitIdComponents in [Unit_Conver
 <tr><td>dimensionality_prefix</td><td>:=</td>
     <td>"square-"<p>| "cubic-"<p>| "pow" ([2-9]|1[0-5]) "-"
         <ul>
+			<li><em>Constraint:</em> must be value in: &lt;unitIdComponent type="power"&gt;.</li>
 			<li><em>Note:</em> "pow2-" and "pow3-" canonicalize to "square-" and "cubic-"</li>
-			<li><em>Note:</em>These are values in &lt;unitIdComponent type=”power”&gt;</li>
+			<li><em>Note:</em> These are values in &lt;unitIdComponent type="power"&gt;</li>
 		</ul></td></tr>
 
 <tr><td>simple_unit</td><td>:=</td>
     <td>(prefix_component "-")* (prefixed_unit | base_component) ("-" suffix_component)*<br/>
 		|  currency_unit<br/>
-		| “em” | “g” | “us” | “hg” | "of"
+		| "em" | "g" | "us" | "hg" | "of"
         <ul>
 		<li><em>Examples:</em> kilometer, meter, cup-metric, fluid-ounce, curr-chf, em</li>
-		<li><em>Note:</em> Three simple units are currently allowed as legacy usage, for tokens that wouldn’t otherwise be a base_component due to length (eg, “<strong>g</strong>-force”).
-			We will likely deprecate those and add conformant aliases in the future: the “hg” and “of” are already only in deprecated simple_units.</li>
+		<li><em>Note:</em> Three simple units are currently allowed as legacy usage, for tokens that wouldn’t otherwise be a base_component due to length (eg, "<strong>g</strong>-force").
+			We will likely deprecate those and add conformant aliases in the future: the "hg" and "of" are already only in deprecated simple_units.</li>
         </ul></td></tr>
 
 <tr><td>prefixed_unit</td><td></td>
@@ -975,36 +984,47 @@ Some of the constraints reference data from the unitIdComponents in [Unit_Conver
 
 <tr><td>si_prefix</td><td>:=</td>
     <td>"deka" | "hecto" | "kilo", …
-        <ul><li><em>Note: </em>See full list at <a href="https://www.nist.gov/pml/special-publication-811">NIST special publication 811</a></li></ul></td></tr>
+        <ul><li><em>Note:</em> See full list at <a href="https://www.nist.gov/pml/special-publication-811">NIST special publication 811</a></li></ul></td></tr>
 
 <tr><td>binary_prefix</td><td>:=</td>
     <td>"kibi", "mebi", …
-        <ul><li><em>Note: </em>See full list at <a href="https://physics.nist.gov/cuu/Units/binary.html">Prefixes for binary multiples</a></li></ul></td></tr>
+        <ul><li><em>Note:</em> See full list at <a href="https://physics.nist.gov/cuu/Units/binary.html">Prefixes for binary multiples</a></li></ul></td></tr>
 
 <tr><td>prefix_component</td><td>:=</td>
     <td>[a-z]{3,∞}
-        <ul><li><em>Constraint:</em> must be value in: &lt;unitIdComponent type=”prefix_component”&gt;.</li></ul></td></tr>
+        <ul><li><em>Constraint:</em> must be value in: &lt;unitIdComponent type="prefix"&gt;.</li></ul></td></tr>
 
 <tr><td>base_component</td><td>:=</td>
     <td>[a-z]{3,∞}
         <ul><li><em>Constraint:</em> must not be a value in any of the following:<br>
-			&lt;unitIdComponent type=”prefix_component”&gt;<br>
-			or &lt;unitIdComponent type=”suffix_component”&gt; <br>
-			or &lt;unitIdComponent type=”power”&gt;<br>
-			or &lt;unitIdComponent type=”and”&gt;<br>
-			or &lt;unitIdComponent type=”per”&gt;.
-		</li></ul>
-        <ul><li><em>Constraint:</em> must not have a prefix as an initial segment.</li></ul>
+			&lt;unitIdComponent type="prefix"&gt;<br>
+			or &lt;unitIdComponent type="suffix"&gt; <br>
+			or &lt;unitIdComponent type="power"&gt;<br>
+			or &lt;unitIdComponent type="and"&gt;<br>
+			or &lt;unitIdComponent type="per"&gt;.
+		</li>
+		<li><em>Constraint:</em> must not have a prefix as an initial segment.</li>
+		<li><em>Constraint:</em> no two different base_components will share the first 8 letters.
+				(<b>For more information, see <a href="#Unit_Identifier_Uniqueness">Unit Identifier Uniqueness</a>.)</b>
+			</li>
+		</ul>
 	</td></tr>
 
 <tr><td>suffix_component</td><td>:=</td>
     <td>[a-z]{3,∞}
-        <ul><li><em>Constraint:</em> must be value in: &lt;unitIdComponent type=”suffix_component”&gt;</li></ul></td></tr>
+        <ul>
+			<li><em>Constraint:</em> must be value in: &lt;unitIdComponent type="suffix"&gt;</li>
+		</ul></td></tr>
 
 <tr><td>mixed_unit_identifier</td><td>:=</td>
-    <td>(single_unit | pu_single_unit) ("-and-" (single_unit | pu_single_unit ))*
+    <td>(single_unit | pu_single_unit) ("-" and "-" (single_unit | pu_single_unit ))*
         <ul><li><em>Example: foot-and-inch</em></li>
-	       <li><em>Note:</em>The token 'and' is the single value in &lt;unitIdComponent type=”and”&gt;</li>
+		</ul></td></tr>
+
+<tr><td>and</td><td>:=</td>
+    <td>"and"
+		<ul>
+			<li><em>Constraint:</em> The token 'and' is the single value in &lt;unitIdComponent type="and"&gt;</li>
 		</ul></td></tr>
 
 <tr><td>long_unit_identifier</td><td>:=</td>
@@ -1015,15 +1035,19 @@ Some of the constraints reference data from the unitIdComponents in [Unit_Conver
 
 <tr><td>currency_unit</td><td>:=</td>
     <td>"curr-" [a-z]{3}
-        <ul><li><em>Constraints:</em>
-            <ul><li>The first part of the currency_unit is a standard prefix; the second part of the currency unit must be a valid <a href="tr35.md#UnicodeCurrencyIdentifier">Unicode currency identifier</a>. Note: CLDR does not provide conversions for currencies; this is only intended for formatting.</li>
-            </ul></li>
-            <li><em>Examples:</em> curr-eur-per-square-meter, or pound-per-curr-usd</li>
-        </ul></td></tr>
+        <ul>
+			<li><em>Constraint:</em> The first part of the currency_unit is a standard prefix; the second part of the currency unit must be a valid <a href="tr35.md#UnicodeCurrencyIdentifier">Unicode currency identifier</a>.</li>
+		</ul>
+		<ul>
+            <li><em>Examples:</em> <b>curr-eur</b>-per-square-meter, or pound-per-<b>curr-usd</b></li>
+			<li><em>Note:</em> CLDR does not provide conversions for currencies; this is only intended for formatting.
+				The locale data for currencies is supplied in the <code>currencies</code> element, not in the <code>units</code> element.</li>
+        </ul>
+	</td></tr>
 
 </tbody></table>
 
-Note that while the syntax allows for number_prefixes in multiple places, the typical use case is only one instances, and after a "-per-".
+Note that while the syntax allows for number_prefixes in multiple places, the typical use case is only one instance, after a "-per-".
 
 The simple_unit structure does not allow for any two simple_units to overlap.
 That is, there are no cases where simple_unit1 consists of X-Y and simple_unit2 consists of Y-Z.
@@ -1036,11 +1060,31 @@ For example:
 * Similarly, when a base_component is encountered, one can collect any suffix components, and stop.
 * Encountering a suffix_component in any other circumstance is an error.
 
+### <a name="Unit_Identifier_Uniqueness" href="#Unit_Identifier_Uniqueness">Unit Identifier Uniqueness</a>
+CLDR Unit Identifiers can be used as values in locale identifiers. When that is done, the syntax is modified whenever a `prefixed_unit` would be longer than 8 characters. In such a case:
+
+* If there is no `prefix` the `prefixed_unit` is truncated to 8 characters.
+* If there is a `prefix`, a hyphen is added between the `prefix` and the `base_component`. If that `base_component` is longer than 8 characters, it is truncated to 8 characters.
+
+_Example_
+| Unit identifer | BCP47 syntax example | Comment |
+| ----      | ----               | ----                           |
+| kilogram  | en-u-ux-kilogram   | kilogram fits in 8 characters  |
+| centilux  | en-u-ux-centilux   | centilux fixs in 8 characters  |
+| steradian | en-u-ux-steradia   | steradian exceeds 8 characters |
+| centigram | en-u-ux-centi-gram | centigram exceeds 8 characters |
+| kilometer | en-u-ux-kilo-meter | kilometer exceeds 8 characters |
+| quectolux | en-u-ux-kilo-meter | kilometer exceeds 8 characters |
+
+This requires that each of the elements in base_components are unique to eight letters, that is: **no two different base_components will share the first 8 letters**.
+
+The reason that the `prefixed_unit` as a whole is not simply truncated to 8 characters is that would impose too strict a constraint. There  are 5 letter prefixes such as 'centi' and more recently 6 letter prefixes such as 'quecto'. That would cause prefixed `base_component` as short as 'gram' and 'gray' to be ambiguous when truncated to 8 letters: 'centigra'; and 'lumen' and 'lux' would fail with the 6 letter prefixes.
+
 ### <a name="Example_Units" href="#Example_Units">Example Units</a>
 
 The following table contains examples of groupings and units currently defined by CLDR.
 The units in CLDR are not comprehensive; it is anticipated that more will be added over time.
-The complete list of supported units is in the validity data: see _Section Validity Data](tr35.md#Validity_Data)_.
+The complete list of supported units is in the validity data: see _[Section Validity Data](tr35.md#Validity_Data)_.
 
 | Type           | Core Unit Identifier     | Compound? | Sample Format  |
 | -------------- | ------------------------ | --------- | -------------- |
@@ -1164,14 +1208,15 @@ There are three widths: **long**, **short**, and **narrow**. As usual, the narro
 
 Where the unit of measurement is one of the [International System of Units (SI)](https://physics.nist.gov/cuu/Units/units.html), the short and narrow forms will typically use the international symbols, such as “mm” for millimeter. They may, however, be different if that is customary for the language or locale. For example, in Russian it may be more typical to see the Cyrillic characters “мм”.
 
-Units are included for translation even where they are not typically used in a particular locale, such as kilometers in the US, or inches in Germany. This is to account for use by travelers and specialized domains, such as the German “Fernseher von 32 bis 55 Zoll (80 bis 140 cm)” for TV screen size in inches and centimeters.
+Units are sometimes included for translation even where they are not typically used in a particular locale, such as kilometers in the US, or inches in Germany. This is to account for use by travelers and specialized domains, such as the German “Fernseher von 32 bis 55 Zoll (80 bis 140 cm)” for TV screen size in inches and centimeters.
 
 For temperature, there is a special unit `<unit type="temperature-generic">`, which is used when it is clear from context whether Celcius or Fahrenheit is implied.
 
 For duration, there are special units such as `<unit type="duration-year-person">` and `<unit type="duration-year-week">` for indicating the age of a person, which requires special forms in some languages. For example, in "zh", references to a person being 3 days old or 30 years old would use the forms “他3天大” and “他30岁” respectively.
 
 <a name="compoundUnitPattern"></a><a name="perUnitPatterns"></a>
-### <a name="compound-units" href="#compound-units">Compound Units</a>
+
+### Compound Units
 
 A common combination of units is X per Y, such as _miles per hour_ or _liters per second_ or _kilowatt-hours_.
 
@@ -1805,7 +1850,8 @@ If the direction is `forward`, then an ID is composed from `target + "-" + sourc
 
 The `visibility` attribute indicates whether the IDs should be externally visible, or whether they are only used internally.
 
-In previous versions, the rules were expressed as fine-grained XML. That was discarded in CLDR version 29, in favor of a simpler format where the separate rules are simply terminated with ";".
+Note: In CLDR v28 and before, the rules were expressed as fine-grained XML.
+That was discarded in CLDR version 29, in favor of a simpler format where the separate rules are simply terminated with ";".
 
 The transform rules are similar to regular-expression substitutions, but adapted to the specific domain of text transformations. The rules and comments in this discussion will be intermixed, with # marking the comments. The simplest rule is a conversion rule, which replaces one string of characters with another. The conversion rule takes the following form:
 
@@ -1829,6 +1875,8 @@ All of the ASCII characters except numbers and letters are reserved for use in t
 '←'   → 'arrow sign' ;
 '←'   → arrow' 'sign ;
 ```
+
+Note: The characters `→`, `←`, `↔` are preferred, but can be represented by the ASCII character `>`, `<`, and `<>`, respectively.
 
 Spaces may be inserted anywhere without any effect on the rules. Use extra space to separate items out for clarity without worrying about the effects. This feature is particularly useful with combining marks; it is handy to put some spaces around it to separate it from the surrounding text. The following is an example:
 
@@ -1911,18 +1959,51 @@ It will thus convert “-B A-B a-b” to “B AB a-b”.
 
 #### <a name="Revisiting" href="#Revisiting">Revisiting</a>
 
-If the resulting text contains a vertical bar "|", then that means that processing will proceed from that point and that the transform will revisit part of the resulting text. Thus the | marks a "cursor" position. For example, if we have the following, then the string "xa" will convert to "w".
+If the resulting text contains a vertical bar "|", then that means that processing will proceed from that point and that the transform will revisit part of the resulting text.
+Thus the | marks a "cursor" position.
+For example, if we have the following, then the string "xa" will convert to "yw".
 
 ```
 x → y | z ;
 z a → w ;
 ```
 
-First, "xa" is converted to "yza". Then the processing will continue from after the character "y", pick up the "za", and convert it. Had we not had the "|", the result would have been simply "yza". The '@' character can be used as filler character to place the revisiting point off the start or end of the string. Thus the following causes x to be replaced, and the cursor to be backed up by two characters.
+First, "xa" is converted to "yza". Then the processing will continue from after the character "y", pick up the "za", and convert it. Had we not had the "|", the result would have been simply "yza".
+
+The '@' character can be used as filler character to place the revisiting point off the start or end of the string — but only within the context. Consider the following rules, with the table afterwards showing how they work.
 
 ```
-x → |@@y;
+1. [a-z]{x > |@ab ;
+2. ab > J;
+3. ca > M;
 ```
+The ⸠ indicates the virtual cursor:
+
+| Current text | Matching rule |
+| - | - |
+| ⸠cx | no match, cursor advances one code point |
+| c⸠x | matches rule 1, so the text is replaced and cursor backs up. |
+| ⸠cab | matches rule 3, so the text is replaced, with cursor at the end. |
+| Mb⸠ | cursor is at the end, so we are done. |
+
+Notice that rule 2 did not have a chance to trigger.
+
+There is a current restriction that @ cannot back up before the before_context or after the after_context.
+Consider the rules if rule 1 is adjusted to have no before_context.
+
+```
+1'. x > |@ab ;
+2. ab > J ;
+3. ca > M;
+```
+
+In that case, the results are different.
+| Current text | Matching rule |
+| - | - |
+| ⸠cx | no match, cursor advances one code point |
+| c⸠x | matches rule 1, so the text is replaced and cursor backs up; but only to where  |
+| c⸠ab | matches **rule 2**, so the text is replaced, with cursor at the end. |
+| cJ⸠ | cursor is at the end, so we are done. |
 
 #### <a name="Example" href="#Example">Example</a>
 
@@ -2079,6 +2160,12 @@ Conversion rules can be forward, backward, or double. The complete conversion ru
 > b | c  ←  e { f g } h ;
 > ```
 
+The `completed_result` | `result_to_revisit` is also known as the `resulting_text`. Either or both of the values can be empty. For example, the following removes any a, b, or c.
+
+```
+[a-c] → ;
+```
+
 #### <a name="Intermixing_Transform_Rules_and_Conversion_Rules" href="#Intermixing_Transform_Rules_and_Conversion_Rules">Intermixing Transform Rules and Conversion Rules</a>
 
 Transform rules and conversion rules may be freely intermixed. Inserting a transform rule into the middle of a set of conversion rules has an important side effect.
@@ -2200,6 +2287,56 @@ m → r ;
 </table>
 
 Note how the irrelevant rules (the inverse filter rule and the rules containing ←) are omitted (ignored, actually) in the forward direction, and notice how things are reversed: the transform rules are inverted and happen in the opposite order, and the groups of conversion rules are also executed in the opposite relative order (although the rules within each group are executed in the same order).
+
+Because the order of rules matters, the following will not work as expected
+```
+c → s;
+ch → kh;
+```
+The second rule can never execute, because it is "masked" by the first.
+To help prevent errors, implementations should try to alert readers when this occurs, eg:
+```
+Rule {c > s;} masks {ch > kh;}
+```
+
+### Transform Syntax Characters
+
+The following summarizes the syntax characters used in transforms.
+
+| Character(s) | Description | Example |
+| - | - | - |
+| ;  | End of a conversion rule, variable definition, or transform rule invocation | a → b ; |
+| \:\: | Invoke a transform | :: Null ; |
+| (, ) | In a transform rule invocation, marks the backwards transform | :: Null (NFD); |
+| $ | Mark the start of a variable, when followed by an ASCII letter | $abc |
+| = | Used to define variables | $a = abc ; |
+| →, \> | Transform from left to right (only for forward conversion rules) | a → b ; |
+| ←, \< | Transform from right to left (only for backward conversion rules) | a ← b ; |
+| ↔, \<\> | Transform from left to right (for forward) and right to left (for backward) | a ↔ b ; |
+| { | Mark the boundary between before_context and the text_to_replace | a {b} c → B ; |
+| } | Mark the boundary between the text_to_replace and after_context | a {b} c → B ; |
+| ' | Escape one or more characters, until the next '  | '\<\>' → x ; |
+| " | Escape one or more characters, until the next " | "\<\>" → x ; |
+| \\ | Escape the next character | \\\<\\\> → x ; |
+| # | Comment (until the end of a line) | a → ; # remove a |
+| \| | In the resulting_text, moves the cursor | a → A \| b; |
+| @ | In the resulting_text, filler character used to move the cursor before the start or after the end of the result | a → Ab@\|; |
+| (, ) | In text_to_replace, a capturing group | ([a-b]) > &hex($1); |
+| $ | In replacement_text, when followed by 1..9, is replaced by the contents of a capture group | ([a-b]) > &hex($1); |
+| ^ | In a before_context, by itself, equivalent to [$] **(deprecated)** | ... |
+| ? | In a before_context, after_context, or text_to_replace, a possessive quantifier for zero or one  | a?b → c ; |
+| + | In a before_context, after_context, or text_to_replace, a possessive quantifier for one or more  | a+b → c ; |
+| * | In a before_context, after_context, or text_to_replace, a possessive quantifier for zero or more  | a*b → c ; |
+| & | Invoke a function in the replacement_text | ([a-b]) > &hex($1); |
+| !, %, _, ~, -, ., / | Reserved for future syntax | ... |
+| SPACE | Ignored except when quoted | a b # same as ab |
+| \uXXXX | Hex notation: 4 Xs | \u0061 |
+| \x{XX...} | Hex notation: 1-6 Xs | \x{61} |
+| [, ] | Marks a UnicodeSet | [a-z] |
+| \p{...} | Marks a UnicodeSet formed from a property | \p{di} |
+| \P{...} | Marks a negative UnicodeSet formed from a property | \p{DI} |
+| $ | Within a UnicodeSet (not before ASCII letter), matches the start or end of the source text (but is not replaced) | [$] b → c |
+| Other | Many of these characters have special meanings inside a UnicodeSet | ... |
 
 ## <a name="ListPatterns" href="#ListPatterns">List Patterns</a>
 
@@ -2507,22 +2644,24 @@ Many emoji are represented by sequences of characters. When there are no `annota
 1.  If **sequence** is an **emoji flag sequence**, look up the territory name in CLDR for the corresponding ASCII characters and return as the short name. For example, the regional indicator symbols P+F would map to “Französisch-Polynesien” in German.
 2.  If **sequence** is an **emoji tag sequence**, look up the subdivision name in CLDR for the corresponding ASCII characters and return as the short name. For example, the TAG characters gbsct would map to “Schottland” in German.
 3.  If **sequence** is a keycap sequence or 🔟, use the characterLabel for "keycap" as the **prefixName** and set the **suffix** to be the sequence (or "10" in the case of 🔟), then go to step 8.
-4.  Let **suffix** and **prefixName** be "".
-5.  If **sequence** contains any emoji modifiers, move them (in order) into **suffix**, removing them from **sequence**.
-6.  If **sequence** is a "KISS", "HEART", "FAMILY", or "HOLDING HANDS" emoji ZWJ sequence, move the characters in **sequence** to the front of **suffix**, and set the **sequence** to be "💏", "💑", or "👪" respectively, and go to step 7.
+4.  If the **sequence** ends with the string ZWJ + ➡️, look up the name of that sequence with that string removed. Embed that name into the "facing-right" characterLabelPattern and return it.
+5.  Let **suffix** and **prefixName** be "".
+6.  If **sequence** contains any emoji modifiers, move them (in order) into **suffix**, removing them from **sequence**.
+7.  If **sequence** is a "KISS", "HEART", "FAMILY", or "HOLDING HANDS" emoji ZWJ sequence, move the characters in **sequence** to the front of **suffix**, and set the **sequence** to be "💏", "💑", or "👪" respectively, and go to step 7.
     1. A KISS sequence contains ZWJ, "💋", and "❤", which are skipped in moving to **suffix**.
     2. A HEART sequence contains ZWJ and "❤", which are skipped in moving to **suffix**.
     3. A HOLDING HANDS sequence contains ZWJ+🤝+ZWJ, which are skipped in moving to **suffix**.
     4. A FAMILY sequence contains only characters from the set {👦, 👧, 👨, 👩, 👴, 👵, 👶}. Nothing is skipped in moving to **suffix**, except ZWJ.
-7.  If **sequence** ends with ♂ or ♀, and does not have a name, remove the ♂ or ♀ and move the name for "👨" or "👩" respectively to the start of **prefixName**.
-8.  Transform **sequence** and append to **prefixName**, by successively getting names for the longest subsequences, skipping any singleton ZWJ characters. If there is more than one name, use the listPattern for unit-short, type=2 to link them.
-9.  Transform **suffix** into **suffixName** in the same manner.
-10. If both the **prefixName** and **suffixName** are non-empty, form the name by joining them with the "category-list" characterLabelPattern and return it. Otherwise return whichever of them is non-empty.
+8.  If **sequence** ends with ♂ or ♀, and does not have a name, remove the ♂ or ♀ and move the name for "👨" or "👩" respectively to the start of **prefixName**.
+9.  Transform **sequence** and append to **prefixName**, by successively getting names for the longest subsequences, skipping any singleton ZWJ characters. If there is more than one name, use the listPattern for unit-short, type=2 to link them.
+10.  Transform **suffix** into **suffixName** in the same manner.
+11. If both the **prefixName** and **suffixName** are non-empty, form the name by joining them with the "category-list" characterLabelPattern and return it. Otherwise return whichever of them is non-empty.
 
 The synthesized keywords can follow a similar process.
 
 1.  For an **emoji flag sequence** or **emoji tag sequence** representing a subdivision, use "flag".
 2.  For keycap sequences, use "keycap".
+3.  For sequences with ZWJ + ➡️, use the keywords for the sequence without the ZWJ + ➡️.
 3.  For other sequences, add the keywords for the subsequences used to get the short names for **prefixName**, and the short names used for **suffixName**.
 
 Some examples for English data (v30) are given in the following table.
@@ -2634,7 +2773,9 @@ The following are character labels. Where the meaning of the label is fairly cle
 | limited_use                 | limited-use             | Not in common modern use. |
 | male                        | male                    | Indicates that a character is male or masculine in appearance. |
 | modifier                    | modifier                | A Unicode modifier letter or symbol. |
-| nonspacing                  | nonspacing              | Uses for characters that occupy no width by themselves, such as the ¨ over the a in ä. |
+| nonspacing                  | nonspacing              | Used for characters that occupy no width by themselves, such as the ¨ over the a in ä. |
+| facing-left                 | facing-left             | Characters that face to the left. Also used to construct names for emoji variants. |
+| facing-right                | facing-right            | Characters that face to the right. Also used to construct names for emoji variants. |
 
 ### <a name="Typographic_Names" href="#Typographic_Names">Typographic Names</a>
 
@@ -2941,6 +3082,6 @@ For example, for gram-per-meter, the first line above means:
 
 * * *
 
-Copyright © 2001–2023 Unicode, Inc. All Rights Reserved. The Unicode Consortium makes no expressed or implied warranty of any kind, and assumes no liability for errors or omissions. No liability is assumed for incidental and consequential damages in connection with or arising out of the use of the information or programs contained or accompanying this technical report. The Unicode [Terms of Use](https://www.unicode.org/copyright.html) apply.
+Copyright © 2001–2024 Unicode, Inc. All Rights Reserved. The Unicode Consortium makes no expressed or implied warranty of any kind, and assumes no liability for errors or omissions. No liability is assumed for incidental and consequential damages in connection with or arising out of the use of the information or programs contained or accompanying this technical report. The Unicode [Terms of Use](https://www.unicode.org/copyright.html) apply.
 
 Unicode and the Unicode logo are trademarks of Unicode, Inc., and are registered in some jurisdictions.
